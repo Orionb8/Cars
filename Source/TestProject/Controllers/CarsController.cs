@@ -14,7 +14,7 @@ namespace TestProject.Controllers {
     public class CarsController : BaseController<CarModel, IRepo<CarModel>, CarViewModel> {
         public CarsController(
             IRepo<CarModel> repo,
-            IMapper mapper, 
+            IMapper mapper,
             ILoggerFactory loggerFactory) : base(repo, mapper, loggerFactory) {
         }
     }

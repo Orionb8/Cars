@@ -6,10 +6,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 using TestProject.Data.Context;
 using TestProject.Data.Converters;
 using TestProject.Data.UserRepo;
+using TestProject.Filters;
 using TestProject.Interfaces;
 using TestProject.Mapper;
 using TestProject.Models;
@@ -51,7 +53,15 @@ namespace TestProject {
                 options.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
                 options.JsonSerializerOptions.MaxDepth = 10;
             });
-            services.AddSwaggerGen();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.AddSecurityDefinition("basic", new OpenApiSecurityScheme {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "basic"
+                });
+                c.OperationFilter<SecureEndpointAuthRequirementFilter>();
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

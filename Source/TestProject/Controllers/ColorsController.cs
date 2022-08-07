@@ -22,14 +22,16 @@ namespace TestProject.Controllers {
             IMapper mapper,
             ILoggerFactory loggerFactory) : base(repo, mapper, loggerFactory) {
         }
-
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async override Task<ActionResult<ColorViewModel>> Post([FromBody] ColorViewModel vm, CancellationToken cancellationToken = default) {
             return Ok();
         }
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async override Task<ActionResult<ColorViewModel>> Put([FromBody] ColorViewModel vm, CancellationToken cancellationToken = default) {
             return Ok();
         }
-        public async override Task<ActionResult> Delete([FromBody] ColorViewModel vm, CancellationToken cancellationToken = default) {
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async override Task<ActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken = default) {
             return Ok();
         }
     }

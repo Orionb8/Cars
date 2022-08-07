@@ -10,18 +10,14 @@ using System.Threading.Tasks;
 using TestProject.Interfaces;
 
 namespace TestProject.Mvc.Controller {
-    [ApiExplorerSettings(IgnoreApi = true)]
-    public abstract class BaseController<T, TRepo, TVm> : ControllerBase, IDisposable
-        where T : class, new()
-        where TRepo : IRepo<T>
-        where TVm : IViewModel<T> {
+    public abstract class BaseController<TEntity, TRepo, TVm> : ControllerBase, IDisposable
+        where TEntity : class, new()
+        where TRepo : IRepo<TEntity>
+        where TVm : IViewModel<TEntity> {
         protected readonly TRepo _repo;
         protected readonly IMapper _mapper;
         protected readonly ILogger _logger;
-        #region logs
 
-        //_logger = loggerFactory.CreateLogger(GetType());
-        #endregion
         public BaseController(TRepo repo,
             IMapper mapper, ILoggerFactory loggerFactory) {
             _repo = repo;
@@ -36,7 +32,7 @@ namespace TestProject.Mvc.Controller {
                 IQueryable set = _repo.Set().Skip(skip).Take(take);
                 return Ok(new {
                     Result = await set.ProjectTo<TVm>(_mapper.ConfigurationProvider).ToListAsync(),
-                    Count = set.Cast<T>().Count()
+                    Count = await set.Cast<TEntity>().CountAsync()
                 });
             } catch(Exception ex) {
                 _logger.LogError(ex, ex.Message);
@@ -46,11 +42,13 @@ namespace TestProject.Mvc.Controller {
         }
 
         [HttpGet("{id}")]
-        public virtual async Task<TVm> Get([FromRoute] TVm vm, CancellationToken cancellationToken = default) {
+        public virtual async Task<TVm> Get([FromRoute] int id, CancellationToken cancellationToken = default) {
             try {
+                var vm = ModelToVm(await _repo.GetSingle(id));
                 return await _repo.Set()
                     .Where(vm.EqualsExpression)
                     .ProjectTo<TVm>(_mapper.ConfigurationProvider).SingleOrDefaultAsync(cancellationToken);
+
             } catch(Exception ex) {
                 _logger.LogError(ex, ex.Message);
                 return default(TVm);
@@ -63,7 +61,7 @@ namespace TestProject.Mvc.Controller {
                 if(vm == null) return BadRequest(ModelState);
                 if(_repo.Set().Any(vm.EqualsExpression)) return BadRequest();
 
-                T model;
+                TEntity model;
                 using(var transaction = await _repo.BeginTransactionAsync(cancellationToken)) {
                     model = VmToModel(vm);
 
@@ -124,11 +122,14 @@ namespace TestProject.Mvc.Controller {
         }
 
         [HttpDelete("{id}")]
-        public virtual async Task<ActionResult> Delete([FromRoute] TVm vm, CancellationToken cancellationToken = default) {
+        public virtual async Task<ActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken = default) {
             try {
                 using(var transaction = await _repo.BeginTransactionAsync(cancellationToken)) {
                     try {
-                        var model = await _repo.Set().SingleAsync(vm.EqualsExpression, cancellationToken);
+                        TVm vm;
+                        //Func<TEntity, bool> idd = vm.EqualsExpressionById(id);
+                        //var model = await _repo.Set().Cast<TEntity>().SingleAsync(, cancellationToken);
+                        var model = await _repo.GetSingle(id);
 
                         if(model is IRecoverable recoverable) {
                             recoverable.DeletedAtTime = DateTime.Now;
@@ -153,23 +154,25 @@ namespace TestProject.Mvc.Controller {
             finally {
             }
         }
-        protected virtual TVm ModelToVm(T model) {
+        [NonAction]
+        protected virtual TVm ModelToVm(TEntity model) {
             return _mapper.Map<TVm>(model);
         }
-        protected virtual T VmToModel(TVm vm) {
-            T model;
+        [NonAction]
+        protected virtual TEntity VmToModel(TVm vm) {
+            TEntity model;
             if(vm.IsNew()) {
-                model = new T();
+                model = new TEntity();
             } else {
                 model = _repo.Set().Single(vm.EqualsExpression);
             }
 
             return _mapper.Map(vm, model);
         }
-
+        [NonAction]
         protected virtual void Dispose(bool disposing) {
         }
-
+        [NonAction]
         public void Dispose() {
         }
     }

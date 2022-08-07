@@ -8,6 +8,7 @@ namespace TestProject.Interfaces {
         : IDisposable
         where TEntity : class {
         IQueryable<TEntity> Set();
+        Task<TEntity> GetSingle(int? id);
         Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
         Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);

@@ -42,5 +42,9 @@ namespace TestProject.Mvc.Repo {
         public IQueryable<TEntity> Set() {
             return _ctx.Set<TEntity>();
         }
+
+        public async Task<TEntity> GetSingle(int? id) {
+            return await _ctx.Set<TEntity>().FindAsync(id);
+        }
     }
 }
