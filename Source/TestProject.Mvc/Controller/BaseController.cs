@@ -127,8 +127,6 @@ namespace TestProject.Mvc.Controller {
                 using(var transaction = await _repo.BeginTransactionAsync(cancellationToken)) {
                     try {
                         TVm vm;
-                        //Func<TEntity, bool> idd = vm.EqualsExpressionById(id);
-                        //var model = await _repo.Set().Cast<TEntity>().SingleAsync(, cancellationToken);
                         var model = await _repo.GetSingle(id);
 
                         if(model is IRecoverable recoverable) {
